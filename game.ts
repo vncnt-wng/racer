@@ -69,7 +69,7 @@ const game: GameState = {
     handlingModel: HandlingModel.LAND
 }
 
-const trackInterval = 200;
+const trackInterval = 150;
 
 const keys: Record<string, boolean> = {};
 
@@ -97,6 +97,9 @@ const updateCar = () => {
     if (game.handlingModel == HandlingModel.LAND) {
         velocity = handleLand();
     }
+    else if (game.handlingModel == HandlingModel.AIR) {
+        velocity = handleAir();
+    }
     else if (game.handlingModel == HandlingModel.SPACE) {
         velocity = handleSpace();
     }
@@ -119,10 +122,10 @@ const linterp = (toMin: number, toMax: number, fromMin: number, fromMax: number,
 }
 
 const handleLand = (): number => {
-    const accel = 0.05;
-    const maxSpeed = 14;
+    const accel = 0.09;
+    const maxSpeed = 15;
     const friction = 0.03;
-    const turnSpeed = 0.025;
+    const turnSpeed = 0.05;
     // normal physics
     // Up/Down for acceleration/brake
     if (keys['ArrowUp']) player.velocity += accel;
@@ -143,10 +146,63 @@ const handleLand = (): number => {
     return player.velocity;
 }
 
+
+const handleAir = (): number => {
+    const accel = 0.08;
+    const angularAccel = 0.0015;
+    const angularFriction = 0.01;
+    const friction = 0.04;
+
+    // rotational
+    // Up/Down for acceleration/brake
+    const vM = Math.sqrt(Math.pow(player.vX, 2) + Math.pow(player.vY, 2))
+    
+
+    if (keys['ArrowUp']) {
+        player.vX += Math.cos(player.angle) * accel;
+        player.vY += Math.sin(player.angle) * accel;
+    }
+    else if (keys['ArrowDown']) {
+        player.vX -= Math.cos(player.angle) * accel;
+        player.vY -= Math.sin(player.angle) * accel;
+    }
+    else {
+        const angleV = Math.atan(player.vY / player.vX);
+        player.vX += Math.cos(player.angle) * (accel / 2);
+        player.vY += Math.sin(player.angle) * (accel / 2);
+    }
+    
+
+    // Left/Right for turning
+    if (keys['ArrowLeft']) player.velocityRot -= angularAccel;
+    if (keys['ArrowRight']) player.velocityRot += angularAccel;
+
+    if (!(keys['ArrowLeft'] || keys['ArrowRight']) && Math.abs(player.velocityRot) > 0) {
+        player.velocityRot -= Math.sign(player.velocityRot) * angularFriction
+    }
+
+    player.angle += player.velocityRot;
+
+    if (!(keys['ArrowUp'] || keys['ArrowDown']) && Math.abs(vM) > 0) {
+        const frictionM = Math.abs(vM) - friction;
+        const angleV = Math.atan(player.vY / player.vX);
+        const updateAngle = angleV + player.angle / 2
+        const sign = player.vX < 0 ? -1 : 1;
+        player.vX = sign * frictionM * Math.cos(updateAngle);
+        player.vY = sign * frictionM * Math.sin(updateAngle);
+    }
+
+    // Move
+    player.x += player.vX;
+    player.y += player.vY;
+
+    return vM;
+}
+
 const handleSpace = (): number => {
-    const accel = 0.05;
-    const angularAccel = 0.002;
-    const friction = 0.03;
+    const accel = 0.08;
+    const angularAccel = 0.0015;
+    const friction = 0.02;
 
     // rotational
     // Up/Down for acceleration/brake
@@ -320,7 +376,6 @@ const initialise = () => {
 }
 
 function gameLoop() {
-    console.log(player.x, player.y)
     update();
     draw();
     requestAnimationFrame(gameLoop);
