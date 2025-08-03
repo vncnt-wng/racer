@@ -68,7 +68,7 @@ function update() {
     const accel = 0.03;
     const maxSpeed = 14;
     const friction = 0.03;
-    const turnSpeed = 0.02;
+    const turnSpeed = 0.03;
     // Up/Down for acceleration/brake
     if (keys['ArrowUp']) player.velocity += accel;
     if (keys['ArrowDown']) player.velocity -= accel * 1.5;
@@ -149,9 +149,11 @@ const drawTrack = () => {
     const intervalHeight = game.currentTrack?.asString.length ?? 0;
     const lenX = Math.ceil(canvas.width / 100) + 1;
     const lenY = Math.ceil(canvas.height / 100) + 1;
+    // 100 interval grid point
     const startingGridX = Math.floor(game.cameraX / 100);
     const startingGridY = Math.floor(game.cameraY / 100);
 
+    // for each square to be displayed, check if has overlap with track coords, continue if not
     for (var y = startingGridY; y < startingGridY + lenY; y++) {
         if (y < 0 || y >= intervalHeight) {
             continue;
@@ -171,8 +173,8 @@ const drawTrack = () => {
             
             }
             ctx.fillRect(
-                ((startingGridX + x) * 100) - game.cameraX, 
-                ((startingGridY + y) * 100) - game.cameraY, 
+                (x * 100) - game.cameraX, 
+                (y * 100) - game.cameraY, 
                 100, 
                 100
             );
