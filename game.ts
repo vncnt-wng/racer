@@ -24,7 +24,7 @@ interface Sprite {
     height: number;
     color: string;
     angle: number;
-    // velocity: number;
+    velocity: number;
     vX: number;
     vY: number;
     velocityRot: number;
@@ -33,7 +33,8 @@ interface Sprite {
 interface GameState {
     cameraX: number,
     cameraY: number,
-    currentTrack: TrackInfo | null
+    currentTrack: TrackInfo | null,
+    handlingModel: HandlingModel | null
 }
 
 
@@ -48,16 +49,24 @@ const player: Sprite = {
     height: 22,
     color: '#ff4444',
     angle: 0,
-    // velocity: 0,
+    velocity: 0,
     vX: 0,
     vY: 0,
     velocityRot: 0
 };
 
+enum HandlingModel {
+    LAND,
+    WATER,
+    AIR,
+    SPACE
+}
+
 const game: GameState = {
     cameraX: 0,
     cameraY: 0,
-    currentTrack: null
+    currentTrack: null,
+    handlingModel: HandlingModel.LAND
 }
 
 const trackInterval = 200;
@@ -84,33 +93,60 @@ function updateCamera() {
 }
 
 const updateCar = () => {
-    const accel = 0.03;
-    const angularAccel = 0.001;
+    var velocity = 0;
+    if (game.handlingModel == HandlingModel.LAND) {
+        velocity = handleLand();
+    }
+    else if (game.handlingModel == HandlingModel.SPACE) {
+        velocity = handleSpace();
+    }
+
+    var low = [0, 200, 250]
+    var high = [255, 50, 50]
+    var colour = [
+        linterp(low[0], high[0], 0, 15, velocity),
+        linterp(low[1], high[1], 0, 15, velocity),
+        linterp(low[2], high[2], 0, 15, velocity),
+    ]
+
+    player.color = `rgb(${colour[0]}, ${colour[1]}, ${colour[2]})`
+}
+
+
+const linterp = (toMin: number, toMax: number, fromMin: number, fromMax: number, value: number) => {
+    const prop = Math.pow((value - fromMin) / (fromMax - fromMin), 2);
+    return (prop * (toMax - toMin)) + toMin;
+}
+
+const handleLand = (): number => {
+    const accel = 0.05;
     const maxSpeed = 14;
     const friction = 0.03;
-    const turnSpeed = 0.03;
-    
+    const turnSpeed = 0.025;
     // normal physics
-    // // Up/Down for acceleration/brake
-    // if (keys['ArrowUp']) player.velocity += accel;
-    // if (keys['ArrowDown']) player.velocity -= accel;
-    // // Left/Right for turning
-    // if (keys['ArrowLeft']) player.velocityRot -= angularAccel;
-    // if (keys['ArrowRight']) player.velocityRot += angularAccel;
+    // Up/Down for acceleration/brake
+    if (keys['ArrowUp']) player.velocity += accel;
+    if (keys['ArrowDown']) player.velocity -= 1.5 * accel;
+    // Left/Right for turning
+    if (keys['ArrowLeft']) player.angle -= turnSpeed * (player.velocity !== 0 ? 1 : 0);
+    if (keys['ArrowRight']) player.angle += turnSpeed * (player.velocity !== 0 ? 1 : 0);
+    // Clamp speed
+    player.velocity = Math.max(-maxSpeed, Math.min(maxSpeed, player.velocity));
+    // Friction
+    if (!keys['ArrowUp'] && !keys['ArrowDown']) {
+        if (player.velocity > 0) player.velocity = Math.max(0, player.velocity - friction);
+        else if (player.velocity < 0) player.velocity = Math.min(0, player.velocity + friction);
+    }
+    // Move
+    player.x += Math.cos(player.angle) * player.velocity;
+    player.y += Math.sin(player.angle) * player.velocity;
+    return player.velocity;
+}
 
-    // player.angle += player.velocityRot;
-    // // if (keys['ArrowLeft']) player.angle -= turnSpeed * (player.velocity !== 0 ? 1 : 0);
-    // // if (keys['ArrowRight']) player.angle += turnSpeed * (player.velocity !== 0 ? 1 : 0);
-    // // Clamp speed
-    // player.velocity = Math.max(-maxSpeed, Math.min(maxSpeed, player.velocity));
-    // // Friction
-    // if (!keys['ArrowUp'] && !keys['ArrowDown']) {
-    //     if (player.velocity > 0) player.velocity = Math.max(0, player.velocity - friction);
-    //     else if (player.velocity < 0) player.velocity = Math.min(0, player.velocity + friction);
-    // }
-    // // Move
-    // player.x += Math.cos(player.angle) * player.velocity;
-    // player.y += Math.sin(player.angle) * player.velocity;
+const handleSpace = (): number => {
+    const accel = 0.05;
+    const angularAccel = 0.002;
+    const friction = 0.03;
 
     // rotational
     // Up/Down for acceleration/brake
@@ -129,11 +165,7 @@ const updateCar = () => {
     if (keys['ArrowRight']) player.velocityRot += angularAccel;
 
     player.angle += player.velocityRot;
-    // if (keys['ArrowLeft']) player.angle -= turnSpeed * (player.velocity !== 0 ? 1 : 0);
-    // if (keys['ArrowRight']) player.angle += turnSpeed * (player.velocity !== 0 ? 1 : 0);
-    // Clamp speed
-    // player.velocity = Math.max(-maxSpeed, Math.min(maxSpeed, player.velocity));
-    // Friction
+
     if (!(keys['ArrowUp'] || keys['ArrowDown']) && Math.abs(vM) > 0) {
         const frictionM = Math.abs(vM) - friction;
         const angleV = Math.atan(player.vY / player.vX);
@@ -145,6 +177,8 @@ const updateCar = () => {
     // Move
     player.x += player.vX;
     player.y += player.vY;
+
+    return vM;
 }
 
 function draw() { 
@@ -167,9 +201,28 @@ function drawCar() {
     ctx.fillStyle = player.color;
     ctx.fillRect(-player.width / 2, -player.height / 2, player.width, player.height);
 
-    ctx.fillStyle = 'orange'
-    if (keys['ArrowUp']) ctx.fillRect(-player.width, (-player.height / 2)+ 6, 20, 8);
-    if (keys['ArrowDown']) ctx.fillRect(player.width / 2, (-player.height / 2) +6, 20, 8);
+    if (game.handlingModel == HandlingModel.LAND) {
+        ctx.fillStyle = 'black'
+        ctx.fillRect(player.width / 4, (-player.height / 2) - 2, 10, 2);
+        ctx.fillRect(player.width / 4, (player.height / 2), 10, 2);
+        ctx.fillRect(- player.width / 4 - 10, (-player.height / 2) - 2, 10, 2);
+        ctx.fillRect(- player.width / 4 - 10, (player.height / 2), 10, 2);
+    }
+
+    if (game.handlingModel == HandlingModel.SPACE) {
+        ctx.fillStyle = 'orange'
+        if (keys['ArrowUp']) ctx.fillRect(-player.width, (-player.height / 2) + 7, 20, 8);
+        if (keys['ArrowDown']) ctx.fillRect(player.width / 2, (-player.height / 2) + 7, 20, 8);
+        if (keys['ArrowRight']) {
+            ctx.fillRect(player.width / 4, (-player.height / 2) - 10, 6, 10);
+            ctx.fillRect(-player.width / 4 - 6, (player.height / 2), 6, 10);
+        }
+        if (keys['ArrowLeft']) {
+            ctx.fillRect(player.width / 4, (player.height / 2), 6, 10);
+            ctx.fillRect(-player.width / 4 - 6, (-player.height / 2) - 10, 6, 10);
+        }
+    }
+    
     // if (keys['ArrowDown']) player.velocity -= accel * 1.5;
     // // Left/Right for turning
     // if (keys['ArrowLeft']) player.angle -= turnSpeed * (player.velocity !== 0 ? 1 : 0);
@@ -243,8 +296,12 @@ const drawTrack = () => {
 }
 
 function drawStats() {
-    // stats.innerText = `${player.velocity.toFixed(1).toString()}`
-    stats.innerText = `(${player.vX.toFixed(1).toString()}, ${player.vY.toFixed(1).toString()})`
+    if (game.handlingModel == HandlingModel.LAND) {
+        stats.innerText = `${player.velocity.toFixed(1).toString()}`
+    }
+    else if (game.handlingModel == HandlingModel.SPACE) {
+        stats.innerText = `(${player.vX.toFixed(1).toString()}, ${player.vY.toFixed(1).toString()})`
+    }
     playerCoords.innerText += `
         player (${player.x.toFixed(0).toString()}, ${player.y.toFixed(0).toString()}) \n
         camera (${game.cameraX.toFixed(0).toString()}, ${game.cameraY.toFixed(0).toString()})
