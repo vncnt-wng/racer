@@ -24,7 +24,10 @@ interface Sprite {
     height: number;
     color: string;
     angle: number;
-    velocity: number;
+    // velocity: number;
+    vX: number;
+    vY: number;
+    velocityRot: number;
 }
 
 interface GameState {
@@ -45,7 +48,10 @@ const player: Sprite = {
     height: 22,
     color: '#ff4444',
     angle: 0,
-    velocity: 0,
+    // velocity: 0,
+    vX: 0,
+    vY: 0,
+    velocityRot: 0
 };
 
 const game: GameState = {
@@ -53,6 +59,8 @@ const game: GameState = {
     cameraY: 0,
     currentTrack: null
 }
+
+const trackInterval = 200;
 
 const keys: Record<string, boolean> = {};
 
@@ -65,26 +73,7 @@ window.addEventListener('keyup', (e) => {
 
 function update() {
     updateCamera();
-    const accel = 0.03;
-    const maxSpeed = 14;
-    const friction = 0.03;
-    const turnSpeed = 0.03;
-    // Up/Down for acceleration/brake
-    if (keys['ArrowUp']) player.velocity += accel;
-    if (keys['ArrowDown']) player.velocity -= accel * 1.5;
-    // Left/Right for turning
-    if (keys['ArrowLeft']) player.angle -= turnSpeed * (player.velocity !== 0 ? 1 : 0);
-    if (keys['ArrowRight']) player.angle += turnSpeed * (player.velocity !== 0 ? 1 : 0);
-    // Clamp speed
-    player.velocity = Math.max(-maxSpeed, Math.min(maxSpeed, player.velocity));
-    // Friction
-    if (!keys['ArrowUp'] && !keys['ArrowDown']) {
-        if (player.velocity > 0) player.velocity = Math.max(0, player.velocity - friction);
-        else if (player.velocity < 0) player.velocity = Math.min(0, player.velocity + friction);
-    }
-    // Move
-    player.x += Math.cos(player.angle) * player.velocity;
-    player.y += Math.sin(player.angle) * player.velocity;
+    updateCar();    
 }
 
 function updateCamera() {
@@ -92,6 +81,70 @@ function updateCamera() {
     // cameraX/cameraY is for the to left corner 
     game.cameraX = player.x - canvas.width / 2;
     game.cameraY = player.y - canvas.height / 2;
+}
+
+const updateCar = () => {
+    const accel = 0.03;
+    const angularAccel = 0.001;
+    const maxSpeed = 14;
+    const friction = 0.03;
+    const turnSpeed = 0.03;
+    
+    // normal physics
+    // // Up/Down for acceleration/brake
+    // if (keys['ArrowUp']) player.velocity += accel;
+    // if (keys['ArrowDown']) player.velocity -= accel;
+    // // Left/Right for turning
+    // if (keys['ArrowLeft']) player.velocityRot -= angularAccel;
+    // if (keys['ArrowRight']) player.velocityRot += angularAccel;
+
+    // player.angle += player.velocityRot;
+    // // if (keys['ArrowLeft']) player.angle -= turnSpeed * (player.velocity !== 0 ? 1 : 0);
+    // // if (keys['ArrowRight']) player.angle += turnSpeed * (player.velocity !== 0 ? 1 : 0);
+    // // Clamp speed
+    // player.velocity = Math.max(-maxSpeed, Math.min(maxSpeed, player.velocity));
+    // // Friction
+    // if (!keys['ArrowUp'] && !keys['ArrowDown']) {
+    //     if (player.velocity > 0) player.velocity = Math.max(0, player.velocity - friction);
+    //     else if (player.velocity < 0) player.velocity = Math.min(0, player.velocity + friction);
+    // }
+    // // Move
+    // player.x += Math.cos(player.angle) * player.velocity;
+    // player.y += Math.sin(player.angle) * player.velocity;
+
+    // rotational
+    // Up/Down for acceleration/brake
+    const vM = Math.sqrt(Math.pow(player.vX, 2) + Math.pow(player.vY, 2))
+
+    if (keys['ArrowUp']) {
+        player.vX += Math.cos(player.angle) * accel;
+        player.vY += Math.sin(player.angle) * accel;
+    }
+    if (keys['ArrowDown']) {
+        player.vX -= Math.cos(player.angle) * accel;
+        player.vY -= Math.sin(player.angle) * accel;
+    }
+    // Left/Right for turning
+    if (keys['ArrowLeft']) player.velocityRot -= angularAccel;
+    if (keys['ArrowRight']) player.velocityRot += angularAccel;
+
+    player.angle += player.velocityRot;
+    // if (keys['ArrowLeft']) player.angle -= turnSpeed * (player.velocity !== 0 ? 1 : 0);
+    // if (keys['ArrowRight']) player.angle += turnSpeed * (player.velocity !== 0 ? 1 : 0);
+    // Clamp speed
+    // player.velocity = Math.max(-maxSpeed, Math.min(maxSpeed, player.velocity));
+    // Friction
+    if (!(keys['ArrowUp'] || keys['ArrowDown']) && Math.abs(vM) > 0) {
+        const frictionM = Math.abs(vM) - friction;
+        const angleV = Math.atan(player.vY / player.vX);
+        const sign = player.vX < 0 ? -1 : 1;
+        player.vX = sign * frictionM * Math.cos(angleV);
+        player.vY = sign * frictionM * Math.sin(angleV);
+    }
+
+    // Move
+    player.x += player.vX;
+    player.y += player.vY;
 }
 
 function draw() { 
@@ -113,6 +166,15 @@ function drawCar() {
     ctx.rotate(player.angle);
     ctx.fillStyle = player.color;
     ctx.fillRect(-player.width / 2, -player.height / 2, player.width, player.height);
+
+    ctx.fillStyle = 'orange'
+    if (keys['ArrowUp']) ctx.fillRect(-player.width, (-player.height / 2)+ 6, 20, 8);
+    if (keys['ArrowDown']) ctx.fillRect(player.width / 2, (-player.height / 2) +6, 20, 8);
+    // if (keys['ArrowDown']) player.velocity -= accel * 1.5;
+    // // Left/Right for turning
+    // if (keys['ArrowLeft']) player.angle -= turnSpeed * (player.velocity !== 0 ? 1 : 0);
+    // if (keys['ArrowRight']) player.angle += turnSpeed * (player.velocity !== 0 ? 1 : 0);
+    
 }
 
 function drawRefGrid() {
@@ -143,15 +205,13 @@ function drawRefGrid() {
 }
 
 const drawTrack = () => {
-    const interval = 100;
-
     const intervalWidth = game.currentTrack?.asString[0].length ?? 0;
     const intervalHeight = game.currentTrack?.asString.length ?? 0;
-    const lenX = Math.ceil(canvas.width / 100) + 1;
-    const lenY = Math.ceil(canvas.height / 100) + 1;
+    const lenX = Math.ceil(canvas.width / trackInterval) + 1;
+    const lenY = Math.ceil(canvas.height / trackInterval) + 1;
     // 100 interval grid point
-    const startingGridX = Math.floor(game.cameraX / 100);
-    const startingGridY = Math.floor(game.cameraY / 100);
+    const startingGridX = Math.floor(game.cameraX / trackInterval);
+    const startingGridY = Math.floor(game.cameraY / trackInterval);
 
     // for each square to be displayed, check if has overlap with track coords, continue if not
     for (var y = startingGridY; y < startingGridY + lenY; y++) {
@@ -173,17 +233,18 @@ const drawTrack = () => {
             
             }
             ctx.fillRect(
-                (x * 100) - game.cameraX, 
-                (y * 100) - game.cameraY, 
-                100, 
-                100
+                (x * trackInterval) - game.cameraX, 
+                (y * trackInterval) - game.cameraY, 
+                trackInterval, 
+                trackInterval
             );
         }
     }
 }
 
 function drawStats() {
-    stats.innerText = `${player.velocity.toFixed(1).toString()}`
+    // stats.innerText = `${player.velocity.toFixed(1).toString()}`
+    stats.innerText = `(${player.vX.toFixed(1).toString()}, ${player.vY.toFixed(1).toString()})`
     playerCoords.innerText += `
         player (${player.x.toFixed(0).toString()}, ${player.y.toFixed(0).toString()}) \n
         camera (${game.cameraX.toFixed(0).toString()}, ${game.cameraY.toFixed(0).toString()})
@@ -194,9 +255,9 @@ const initialise = () => {
     game.currentTrack = parseTrack(test1);
 
     // initialise track 
-    const interval = 100;
-    player.x = (game.currentTrack?.startCoords?.x ?? 0) * interval + (interval / 2);
-    player.y = (game.currentTrack?.startCoords?.y ?? 0) * interval + (interval / 2);
+    
+    player.x = (game.currentTrack?.startCoords?.x ?? 0) * trackInterval + (trackInterval / 2);
+    player.y = (game.currentTrack?.startCoords?.y ?? 0) * trackInterval + (trackInterval / 2);
     game.cameraX = player.x - (canvas.width / 2);
     game.cameraY = player.y - (canvas.height / 2);
 }
