@@ -71,7 +71,7 @@ const game: GameState = {
     handlingModel: HandlingModel.LAND
 }
 
-const trackInterval = 150;
+const trackInterval = 200;
 
 const keys: Record<string, boolean> = {};
 
