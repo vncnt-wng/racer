@@ -8,6 +8,7 @@ export interface TrackInfo {
     backgrounds: TrackCoord[]
     trackCoords: TrackCoord[],
     startCoords?: TrackCoord,
+    startAngle: number,
     asString: string[]
 }
 
@@ -43,6 +44,7 @@ export const parseTrack = (track: string[]): TrackInfo => {
         backgrounds: backgrounds,
         trackCoords: trackCoords,
         startCoords: startCoords,
+        startAngle: - Math.PI / 2,
         asString: track
     };    
 }

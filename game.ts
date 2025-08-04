@@ -28,6 +28,7 @@ interface Sprite {
     vX: number;
     vY: number;
     velocityRot: number;
+    oob: boolean
 }
 
 interface GameState {
@@ -52,7 +53,8 @@ const player: Sprite = {
     velocity: 0,
     vX: 0,
     vY: 0,
-    velocityRot: 0
+    velocityRot: 0,
+    oob: false,
 };
 
 enum HandlingModel {
@@ -122,24 +124,40 @@ const linterp = (toMin: number, toMax: number, fromMin: number, fromMax: number,
 }
 
 const handleLand = (): number => {
-    const accel = 0.09;
-    const maxSpeed = 15;
-    const friction = 0.03;
-    const turnSpeed = 0.05;
+    const accel = 0.06;
+    const maxSpeed = 14;
+    const frictionCoeff = 0.05;
+    const turnSpeed = 0.025;
+
+    const startingGridX = Math.floor(player.x / trackInterval);
+    const startingGridY = Math.floor(player.y / trackInterval);
+
+    var isOOB = false;
+    if (startingGridX > 0 && 
+        startingGridX < (game.currentTrack?.asString[0].length ?? 0) && 
+        startingGridY > 0 && 
+        startingGridY < (game.currentTrack?.asString?.length ?? 0))
+    {
+        isOOB = game.currentTrack?.asString[startingGridY][startingGridX] == '0';
+        player.oob = isOOB;
+    }
+
     // normal physics
     // Up/Down for acceleration/brake
     if (keys['ArrowUp']) player.velocity += accel;
-    if (keys['ArrowDown']) player.velocity -= 1.5 * accel;
+    if (keys['ArrowDown']) player.velocity -= 1.2 * accel;
     // Left/Right for turning
     if (keys['ArrowLeft']) player.angle -= turnSpeed * (player.velocity !== 0 ? 1 : 0);
     if (keys['ArrowRight']) player.angle += turnSpeed * (player.velocity !== 0 ? 1 : 0);
     // Clamp speed
     player.velocity = Math.max(-maxSpeed, Math.min(maxSpeed, player.velocity));
+
+    var friction = (frictionCoeff * (player.velocity / maxSpeed)) * (isOOB ? 4 : 1);
+
     // Friction
-    if (!keys['ArrowUp'] && !keys['ArrowDown']) {
+    // if (!keys['ArrowUp'] && !keys['ArrowDown']) {
         if (player.velocity > 0) player.velocity = Math.max(0, player.velocity - friction);
-        else if (player.velocity < 0) player.velocity = Math.min(0, player.velocity + friction);
-    }
+    // }
     // Move
     player.x += Math.cos(player.angle) * player.velocity;
     player.y += Math.sin(player.angle) * player.velocity;
@@ -353,7 +371,7 @@ const drawTrack = () => {
 
 function drawStats() {
     if (game.handlingModel == HandlingModel.LAND) {
-        stats.innerText = `${player.velocity.toFixed(1).toString()}`
+        stats.innerText = `${player.oob ? '<' : ''}${player.velocity.toFixed(1).toString()}${player.oob ? '>' : ''}`
     }
     else if (game.handlingModel == HandlingModel.SPACE) {
         stats.innerText = `(${player.vX.toFixed(1).toString()}, ${player.vY.toFixed(1).toString()})`
@@ -371,6 +389,7 @@ const initialise = () => {
     
     player.x = (game.currentTrack?.startCoords?.x ?? 0) * trackInterval + (trackInterval / 2);
     player.y = (game.currentTrack?.startCoords?.y ?? 0) * trackInterval + (trackInterval / 2);
+    player.angle = game.currentTrack.startAngle;
     game.cameraX = player.x - (canvas.width / 2);
     game.cameraY = player.y - (canvas.height / 2);
 }
