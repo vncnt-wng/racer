@@ -1,22 +1,4 @@
-// coords on 50 px grid 
-export interface TrackCoord {
-    x: number,
-    y: number
-}
-
-export interface TrackInfo {
-    backgrounds: TrackCoord[]
-    trackCoords: TrackCoord[],
-    startCoords?: TrackCoord,
-    startAngle: number,
-    asString: string[]
-}
-
-const characters = [
-    '0', // oob 
-    '1', // track
-    's' // start
-]
+import { TrackInfo, TrackCoord } from './gameModel'
 
 export const parseTrack = (track: string[]): TrackInfo => {
     var startCoords;
@@ -45,7 +27,8 @@ export const parseTrack = (track: string[]): TrackInfo => {
         trackCoords: trackCoords,
         startCoords: startCoords,
         startAngle: - Math.PI / 2,
-        asString: track
+        asString: track,
+        trackInterval: 200
     };    
 }
 

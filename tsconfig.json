@@ -7,5 +7,5 @@
     "strict": true,
     "esModuleInterop": true
   },
-  "include": ["game.ts"]
+  "include": ["src/game.ts"]
 }
