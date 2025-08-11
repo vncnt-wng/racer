@@ -1,0 +1,11 @@
+{
+    "name": "my-project",
+    "version": "1.0.0",
+    "scripts": {
+        "build": "esbuild src/game.ts --bundle --platform=node --outfile=dist/index.js",
+        "build:watch": "esbuild src/game.ts --bundle --platform=node --outfile=dist/index.js --watch"
+    },
+    "devDependencies": {
+        "esbuild": "^0.23.0"
+    }
+}

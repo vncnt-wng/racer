@@ -10,7 +10,8 @@ export interface TrackInfo {
     startCoords?: TrackCoord,
     startAngle: number,
     asString: string[],
-    trackInterval: number
+    trackInterval: number,
+    finishCoords: TrackCoord[]
 }
 
 export const trackCharacters = [

@@ -2,6 +2,10 @@ import { TrackInfo, TrackCoord } from './gameModel'
 
 export const parseTrack = (track: string[]): TrackInfo => {
     var startCoords;
+    // heading from 90* left for ease of calc
+    var startHeading = -1;
+    const finishCoords: TrackCoord[] = [];
+
     const backgrounds: TrackCoord[] = [];
     const trackCoords: TrackCoord[] = [];
 
@@ -11,8 +15,25 @@ export const parseTrack = (track: string[]): TrackInfo => {
                 case '0':
                     backgrounds.push({x: x, y: y})
                     break;
-                case 's':
+                case 'r':
+                    startHeading = 0
                     startCoords = {x: x, y: y}
+                    break
+                case 'd': 
+                    startHeading = 1          
+                    startCoords = {x: x, y: y}
+                    break;
+                case 'l':
+                    startHeading = 2
+                    startCoords = {x: x, y: y}
+                    break;
+                case 'u':
+                    startHeading = 3
+                    startCoords = {x: x, y: y}
+                    break;
+                case 'f':
+                    finishCoords.push({x: x, y: y})
+                    break;;
                 case '1':
                     trackCoords.push({x: x, y: y})
                     break;
@@ -22,24 +43,27 @@ export const parseTrack = (track: string[]): TrackInfo => {
         })
     })
 
+    console.log(startHeading)
+
     return {
         backgrounds: backgrounds,
         trackCoords: trackCoords,
         startCoords: startCoords,
-        startAngle: - Math.PI / 2,
+        startAngle: startHeading * (Math.PI / 2),
         asString: track,
-        trackInterval: 200
+        trackInterval: 200,
+        finishCoords: finishCoords
     };    
 }
 
 export const test1 = [
     '00000000000000000000000',
-    '01111111110001111100000',
-    '01111111111001101100000',
+    '011111f1110001111100000',
+    '011111f1111001101100000',
     '01100000011111101100000',
-    '0s100111100000001111110',
+    '01100111100000001111110',
     '01100111110000000001110',
     '01111110111111110001110',
-    '01111110011111111111100',
+    '01111l10011111111111100',
     '00000000000000000000000'
 ]
