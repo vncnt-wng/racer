@@ -101,7 +101,7 @@ const handleLand = (context: Context, state: GameState): number => {
     const startingGridY = Math.floor(player.y / currentTrack.trackInterval);
 
     var isOOB = false;
-    handleCurrentTerrain(startingGridX, startingGridY, context, state);
+    // handleCurrentTerrain(startingGridX, startingGridY, context, state);
 
     // normal physics
     // Up/Down for acceleration/brake

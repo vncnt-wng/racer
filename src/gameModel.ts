@@ -4,6 +4,10 @@ export interface TrackCoord {
     y: number
 }
 
+export interface TileStore {
+    tiles: ImageBitmap[]
+}
+
 export interface TrackInfo {
     backgrounds: TrackCoord[]
     trackCoords: TrackCoord[],
@@ -11,7 +15,12 @@ export interface TrackInfo {
     startAngle: number,
     asString: string[],
     trackInterval: number,
-    finishCoords: TrackCoord[]
+    finishCoords: TrackCoord[],
+}
+
+export interface TrackInfov2 {
+    tileIndicies: number[][],
+    tileStore?: TileStore
 }
 
 export const trackCharacters = [
@@ -53,7 +62,7 @@ export interface GameState {
     paused: boolean,
     cameraX: number,
     cameraY: number,
-    currentTrack: TrackInfo | null,
+    currentTrack: TrackInfov2 | null,
     handlingModel: HandlingModel | null
     player: Sprite,
     laps: LapTimes

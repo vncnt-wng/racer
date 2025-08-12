@@ -1,6 +1,9 @@
 import { Context, GameState, HandlingModel, Sprite } from "./gameModel";
 import { parseTrack, test1 } from './loadTrack'
 
+const GAME_WIDTH = 1440;
+const GAME_HEIGHT = 800;
+
 const resizeCanvas = (canvas: HTMLCanvasElement) => {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
@@ -52,11 +55,18 @@ export const initialiseGameState = (ctx: Context): GameState => {
         oob: false,
     };
 
+    var trackv2 = { tileIndicies: [
+        [1, 48, 7, 8, 8],
+        [48, 6, 0, 0, 0],
+        [52, 0, 44, 22, 22],
+        [51, 42, 0, 0, 0],
+        [1, 51, 19, 20, 20]
+    ]}
 
     const game: GameState = {
         cameraX: 0,
         cameraY: 0,
-        currentTrack: parseTrack(test1),
+        currentTrack: trackv2,//parseTrack(test1),
         handlingModel: HandlingModel.LAND,
         player: player,
         laps: {
@@ -64,18 +74,20 @@ export const initialiseGameState = (ctx: Context): GameState => {
             prevLapTimes: [],
             bestTime: null,
             lapStarted: false
-        }
+        },
+        prevPaused: false,
+        paused: false
     }
 
-    player.x = (game.currentTrack?.startCoords?.x ?? 0) * 
-        (game.currentTrack?.trackInterval ?? 0) +
-        ((game.currentTrack?.trackInterval ?? 0) / 2);
-    player.y = (game.currentTrack?.startCoords?.y ?? 0) * 
-        (game.currentTrack?.trackInterval ?? 0)  + 
-        ((game.currentTrack?.trackInterval ?? 0) / 2);
-    player.angle = game.currentTrack!.startAngle;
-    game.cameraX = player.x - (ctx.canvas.width / 2);
-    game.cameraY = player.y - (ctx.canvas.height / 2);
+    // player.x = (game.currentTrack?.startCoords?.x ?? 0) * 
+    //     (game.currentTrack?.trackInterval ?? 0) +
+    //     ((game.currentTrack?.trackInterval ?? 0) / 2);
+    // player.y = (game.currentTrack?.startCoords?.y ?? 0) * 
+    //     (game.currentTrack?.trackInterval ?? 0)  + 
+    //     ((game.currentTrack?.trackInterval ?? 0) / 2);
+    // player.angle = game.currentTrack!.startAngle;
+    // game.cameraX = player.x - (ctx.canvas.width / 2);
+    // game.cameraY = player.y - (ctx.canvas.height / 2);
 
     return game;
 }

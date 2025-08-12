@@ -5,7 +5,8 @@ export const draw = (context: Context, state: GameState) => {
     context.canvasCtx.clearRect(0, 0, context.canvas.width, context.canvas.height);
     context.canvasCtx.save();
     drawRefGrid(context, state);
-    drawTrack(context, state);
+    drawTrackv2(context, state);
+    // drawTrack(context, state);
     drawCar(context, state);
     drawStats(context, state);
     drawTimes(context, state);
@@ -74,7 +75,43 @@ const drawRefGrid = (context: Context, game: GameState) => {
     
 }
 
-const drawTrack = (context: Context, game: GameState) => {
+
+const drawTrackv2 = (context: Context, game: GameState) => {
+    const { canvas, canvasCtx } = context;
+
+    const trackInterval = 128;//game.currentTrack!.trackInterval;
+
+    const intervalWidth = game.currentTrack?.tileIndicies[0].length ?? 0;
+    const intervalHeight = game.currentTrack?.tileIndicies.length ?? 0;
+    const lenX = Math.ceil(canvas.width / trackInterval) + 1;
+    const lenY = Math.ceil(canvas.height / trackInterval) + 1;
+    // 100 interval grid point
+    const startingGridX = Math.floor(game.cameraX / trackInterval);
+    const startingGridY = Math.floor(game.cameraY / trackInterval);
+
+    // for each square to be displayed, check if has overlap with track coords, continue if not
+    for (var y = startingGridY; y < startingGridY + lenY; y++) {
+        if (y < 0 || y >= intervalHeight) {
+            continue;
+        }
+        for (var x = startingGridX; x < startingGridX + lenX; x++) {
+            if (x < 0 || x >= intervalWidth) {
+                continue;
+            }
+            const tileIndex: number = game.currentTrack?.tileIndicies[y][x] ?? 0;
+            // console.log(tileIndex, );
+            canvasCtx!.drawImage( 
+                game.currentTrack!.tileStore?.tiles[tileIndex]!, 
+                Math.floor(x * trackInterval - game.cameraX), 
+                Math.floor(y * trackInterval - game.cameraY), 
+                trackInterval, 
+                trackInterval);
+        }
+    }
+}
+
+
+const drawTrackBasic = (context: Context, game: GameState) => {
     const { canvas, canvasCtx } = context;
 
     const trackInterval = game.currentTrack!.trackInterval;
