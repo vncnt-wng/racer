@@ -2,8 +2,20 @@ import { Context, GameState } from './gameModel'
 import { HandlingModel } from './gameModel'; 
 
 export const update = (context: Context, state: GameState) => {
-    updateCamera(context, state);
-    updateCar(context, state);    
+    
+    checkSpecialKeyPresses(context, state);
+
+    if (!state.paused)
+    {
+        updateCamera(context, state);
+        updateCar(context, state); 
+    }   
+}
+
+const checkSpecialKeyPresses = (context: Context, state: GameState) => {
+    if (context.keys['p']) {
+        state.paused = true;
+    }
 }
 
 const updateCamera = (context: Context, state: GameState) => {

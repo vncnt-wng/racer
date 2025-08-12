@@ -9,6 +9,7 @@ export const draw = (context: Context, state: GameState) => {
     drawCar(context, state);
     drawStats(context, state);
     drawTimes(context, state);
+    drawOverlay(context, state);
     context.canvasCtx.restore();
 }
 
@@ -43,6 +44,7 @@ const drawCar = (context: Context, game: GameState) => {
             ctx.fillRect(-player.width / 4 - 6, (-player.height / 2) - 10, 6, 10);
         }
     }
+    ctx.restore();
 }
 
 const drawRefGrid = (context: Context, game: GameState) => {
@@ -69,6 +71,7 @@ const drawRefGrid = (context: Context, game: GameState) => {
             );
         }
     }
+    
 }
 
 const drawTrack = (context: Context, game: GameState) => {
@@ -145,4 +148,16 @@ const drawTimes = (context: Context, game: GameState) => {
 
     const innerText2 = prevLapTimes.slice(-3).map(s => `${(s / 1000).toFixed(3)}`).join('<br>');
     context.overlays.prevTimes.innerHTML = `<div>${(bestTime ?? 0 / 1000).toFixed(3)}</div><div>${innerText2}</div>`
+}
+
+const drawOverlay = (context: Context, game: GameState) => {
+    context.canvasCtx.fillStyle = 'black'
+    context.canvasCtx.globalAlpha = 0.2;
+    context.canvasCtx.fillRect(
+        0,
+        0, 
+        context.canvas.width, 
+        context.canvas.height
+    );
+    context.canvasCtx.globalAlpha = 1.0;
 }

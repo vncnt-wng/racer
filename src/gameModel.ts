@@ -49,6 +49,8 @@ export interface LapTimes {
 }
 
 export interface GameState {
+    prevPaused: boolean,
+    paused: boolean,
     cameraX: number,
     cameraY: number,
     currentTrack: TrackInfo | null,
