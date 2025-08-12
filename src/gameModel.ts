@@ -41,16 +41,26 @@ export enum HandlingModel {
     SPACE
 }
 
+export interface LapTimes {
+    lapStartTime: number | null
+    prevLapTimes: number[],
+    bestTime: number | null,
+    lapStarted: boolean
+}
+
 export interface GameState {
     cameraX: number,
     cameraY: number,
     currentTrack: TrackInfo | null,
     handlingModel: HandlingModel | null
-    player: Sprite
+    player: Sprite,
+    laps: LapTimes
 }
 
 export interface OverlayElements {
     stats: HTMLDivElement,
+    timer: HTMLDivElement,
+    prevTimes: HTMLDivElement,
     playerCoords: HTMLDivElement
 }
 

@@ -24,6 +24,8 @@ export const initialiseContext = (): Context => {
 
     const overlayElements = {
         stats: document.getElementById('stats') as HTMLDivElement,
+        timer: document.getElementById('timer') as HTMLDivElement,
+        prevTimes: document.getElementById('prevTimes') as HTMLDivElement,
         playerCoords: document.getElementById('playerCoords') as HTMLDivElement
     }
 
@@ -56,7 +58,13 @@ export const initialiseGameState = (ctx: Context): GameState => {
         cameraY: 0,
         currentTrack: parseTrack(test1),
         handlingModel: HandlingModel.LAND,
-        player: player
+        player: player,
+        laps: {
+            lapStartTime: null,
+            prevLapTimes: [],
+            bestTime: null,
+            lapStarted: false
+        }
     }
 
     player.x = (game.currentTrack?.startCoords?.x ?? 0) * 

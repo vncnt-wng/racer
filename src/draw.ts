@@ -8,10 +8,11 @@ export const draw = (context: Context, state: GameState) => {
     drawTrack(context, state);
     drawCar(context, state);
     drawStats(context, state);
+    drawTimes(context, state);
     context.canvasCtx.restore();
 }
 
-function drawCar(context: Context, game: GameState) {
+const drawCar = (context: Context, game: GameState) => {
     const ctx = context.canvasCtx;
     const player = game.player;
     const keys = context.keys;
@@ -44,7 +45,7 @@ function drawCar(context: Context, game: GameState) {
     }
 }
 
-function drawRefGrid(context: Context, game: GameState) {
+const drawRefGrid = (context: Context, game: GameState) => {
     const {canvas, canvasCtx } = context;
     // find bounding box of grid to draw 
     // draw 100px grid
@@ -56,9 +57,7 @@ function drawRefGrid(context: Context, game: GameState) {
     const lenY = Math.ceil(canvas.height / 100) + 1;
     const startingGridX = Math.floor(game.cameraX / 100);
     const startingGridY = Math.floor(game.cameraY / 100);
-    context.overlays.playerCoords.innerText = `\n
-         (${startingGridX.toFixed(0).toString()}, ${startingGridY.toFixed(0).toString()}) \n
-    `
+    context.overlays.playerCoords.innerText = `(${startingGridX.toFixed(0).toString()}, ${startingGridY.toFixed(0).toString()})`
     for (var y = 0; y < lenY; y++) {
         for (var x = 0; x < lenX; x++) {
             canvasCtx.fillStyle = (startingGridX + startingGridY + x + y) % 2 == 0 ? 'lightgray' : 'white';
@@ -98,6 +97,9 @@ const drawTrack = (context: Context, game: GameState) => {
                 case '0':
                     canvasCtx.fillStyle = 'green';
                     break;
+                case 'f':
+                    canvasCtx.fillStyle = 'black';
+                    break;
                 case 's':
                 case '1':
                     canvasCtx.fillStyle = 'darkgray';
@@ -114,7 +116,7 @@ const drawTrack = (context: Context, game: GameState) => {
     }
 }
 
-function drawStats(context: Context, game: GameState) {
+const drawStats = (context: Context, game: GameState) => {
     const { stats, playerCoords } = context.overlays;
     const player = game.player;
 
@@ -125,7 +127,22 @@ function drawStats(context: Context, game: GameState) {
         stats.innerText = `(${player.vX.toFixed(1).toString()}, ${player.vY.toFixed(1).toString()})`
     }
     playerCoords.innerText += `
-        player (${player.x.toFixed(0).toString()}, ${player.y.toFixed(0).toString()}) \n
+        player (${player.x.toFixed(0).toString()}, ${player.y.toFixed(0).toString()})
         camera (${game.cameraX.toFixed(0).toString()}, ${game.cameraY.toFixed(0).toString()})
     `
+}
+
+const drawTimes = (context: Context, game: GameState) => {
+    const { lapStartTime, prevLapTimes, bestTime } = game.laps;
+
+    if (lapStartTime == null) {
+        return;
+    }
+
+    const currentDate = Date.now();
+    const diff = (currentDate - lapStartTime) / 1000;
+    context.overlays.timer.innerText = diff.toFixed(3).toString();
+
+    const innerText2 = prevLapTimes.slice(-3).map(s => `${(s / 1000).toFixed(3)}`).join('<br>');
+    context.overlays.prevTimes.innerHTML = `<div>${(bestTime ?? 0 / 1000).toFixed(3)}</div><div>${innerText2}</div>`
 }

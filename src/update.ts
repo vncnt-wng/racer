@@ -42,6 +42,39 @@ const linterp = (toMin: number, toMax: number, fromMin: number, fromMax: number,
     return (prop * (toMax - toMin)) + toMin;
 }
 
+const handleCurrentTerrain = (startingGridX: number, startingGridY: number, context: Context, state: GameState) => {
+    const player = state.player;
+    const currentTrack = state.currentTrack!;
+
+    if (startingGridX < 0 || 
+        startingGridX >= (currentTrack.asString[0].length ?? 0) ||
+        startingGridY < 0 ||
+        startingGridY >= (currentTrack.asString?.length ?? 0))
+    {
+        return;
+    }
+
+    player.oob = currentTrack.asString[startingGridY][startingGridX] == '0';
+
+    if (currentTrack.asString[startingGridY][startingGridX] == 'f' && state.laps.lapStarted) {
+        if (state.laps.lapStartTime != null) {
+            const newLap = (Date.now() - state.laps.lapStartTime);
+            state.laps.prevLapTimes.push(newLap);
+            if (state.laps.bestTime == null) {
+                state.laps.bestTime = newLap;
+            } 
+            else {
+                state.laps.bestTime = Math.min(newLap, state.laps.bestTime);
+            }
+        }
+        state.laps.lapStartTime = Date.now();
+        state.laps.lapStarted = false;
+    }
+    else if (currentTrack.asString[startingGridY][startingGridX] != 'f') {
+        state.laps.lapStarted = true;
+    }
+}
+
 const handleLand = (context: Context, state: GameState): number => {
     const accel = 0.06;
     const maxSpeed = 14;
@@ -56,14 +89,7 @@ const handleLand = (context: Context, state: GameState): number => {
     const startingGridY = Math.floor(player.y / currentTrack.trackInterval);
 
     var isOOB = false;
-    if (startingGridX > 0 && 
-        startingGridX < (currentTrack.asString[0].length ?? 0) && 
-        startingGridY > 0 && 
-        startingGridY < (currentTrack.asString?.length ?? 0))
-    {
-        isOOB = currentTrack.asString[startingGridY][startingGridX] == '0';
-        player.oob = isOOB;
-    }
+    handleCurrentTerrain(startingGridX, startingGridY, context, state);
 
     // normal physics
     // Up/Down for acceleration/brake
@@ -75,7 +101,7 @@ const handleLand = (context: Context, state: GameState): number => {
     // Clamp speed
     player.velocity = Math.max(-maxSpeed, Math.min(maxSpeed, player.velocity));
 
-    var friction = (frictionCoeff * (player.velocity / maxSpeed)) * (isOOB ? 4 : 1);
+    var friction = (frictionCoeff * (player.velocity / maxSpeed)) * (player.oob ? 4 : 1);
 
     // Friction
     // if (!keys['ArrowUp'] && !keys['ArrowDown']) {
