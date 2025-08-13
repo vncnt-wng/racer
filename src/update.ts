@@ -91,27 +91,26 @@ const handleLand = (context: Context, state: GameState): number => {
     const accel = 0.06;
     const maxSpeed = 14;
     const frictionCoeff = 0.05;
-    const turnSpeed = 0.025;
+    const turnSpeed = 0.1;
     
     const player = state.player;
     const currentTrack =  state.currentTrack!;
     const keys = context.keys;
 
-    const startingGridX = Math.floor(player.x / currentTrack.trackInterval);
-    const startingGridY = Math.floor(player.y / currentTrack.trackInterval);
+    // const startingGridX = Math.floor(player.x / currentTrack.trackInterval);
+    // const startingGridY = Math.floor(player.y / currentTrack.trackInterval);
 
     var isOOB = false;
     // handleCurrentTerrain(startingGridX, startingGridY, context, state);
 
-    // normal physics
-    // Up/Down for acceleration/brake
     if (keys['ArrowUp']) state.player.velocity += accel;
     if (keys['ArrowDown']) player.velocity -= 1.2 * accel;
-    // Left/Right for turning
-    if (keys['ArrowLeft']) player.angle -= turnSpeed * (player.velocity !== 0 ? 1 : 0);
-    if (keys['ArrowRight']) player.angle += turnSpeed * (player.velocity !== 0 ? 1 : 0);
-    // Clamp speed
-    player.velocity = Math.max(-maxSpeed, Math.min(maxSpeed, player.velocity));
+
+    var dangle = turnSpeed * (1 / Math.sqrt(player.velocity));
+    dangle = Math.max(0.05, Math.min(maxSpeed, player.velocity));
+    if (keys['ArrowLeft']) player.angle -= turnSpeed * (1 / Math.sqrt(player.velocity));
+    if (keys['ArrowRight']) player.angle += turnSpeed * (1 / Math.sqrt(player.velocity));
+    player.velocity = Math.max(0, Math.min(maxSpeed, player.velocity));
 
     var friction = (frictionCoeff * (player.velocity / maxSpeed)) * (player.oob ? 4 : 1);
 
