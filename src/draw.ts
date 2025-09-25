@@ -79,7 +79,7 @@ const drawRefGrid = (context: Context, game: GameState) => {
 const drawTrackv2 = (context: Context, game: GameState) => {
     const { canvas, canvasCtx } = context;
 
-    const trackInterval = 128;//game.currentTrack!.trackInterval;
+    const trackInterval = 256;//game.currentTrack!.trackInterval;
 
     const intervalWidth = game.currentTrack?.tileIndicies[0].length ?? 0;
     const intervalHeight = game.currentTrack?.tileIndicies.length ?? 0;
